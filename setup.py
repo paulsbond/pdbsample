@@ -20,7 +20,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3.8",
     ],
-    python_requires="3.8",
-    install_requires=["requests 2.25.1", "solrq 1.1.1"],
+    python_requires=">=3.8",
+    install_requires=["requests", "solrq"],
     entry_points={"console_scripts": ["pdbsample = pdbsample.__main__:main"]},
 )

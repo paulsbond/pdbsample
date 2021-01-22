@@ -1,2 +1,2 @@
-requests 2.25.1
-solrq 1.1.1
+requests
+solrq
