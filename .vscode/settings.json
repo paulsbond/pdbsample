@@ -20,4 +20,5 @@
     ],
     "python.linting.pylintCategorySeverity.refactor": "Information",
     "python.linting.pylintUseMinimalCheckers": false,
+    "python.pythonPath": "C:\\Users\\Paul\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe",
 }
