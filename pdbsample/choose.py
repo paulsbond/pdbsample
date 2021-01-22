@@ -1,5 +1,7 @@
 from typing import List
+import os
 import random
+import pdbsample.pdbe as pdbe
 
 
 class _ResolutionBin:
@@ -22,7 +24,8 @@ def _assign_resolution_bins(args, entries):
     return bins
 
 
-def choose_entries(args, entries) -> List[str]:
+def _choose_new_entries(args) -> List[str]:
+    entries = pdbe.entries(args)
     res_bins = _assign_resolution_bins(args, entries)
     exclude = set()
     if args.exclude is not None:
@@ -59,3 +62,17 @@ def choose_entries(args, entries) -> List[str]:
         )
     print("|-------------|---------|----------|--------|")
     return sorted(e.pdbid for r in res_bins for e in r.chosen)
+
+
+def choose_entries(args) -> List[str]:
+    path = os.path.join("data", "chosen.txt")
+    if os.path.exists(path):
+        print("Using cached chosen entries")
+        with open(path) as stream:
+            return [line.strip() for line in stream]
+    print("Choosing a new set of entries")
+    chosen = _choose_new_entries(args)
+    with open(path, "w") as stream:
+        for pdbid in chosen:
+            stream.write(pdbid + "\n")
+    return chosen
