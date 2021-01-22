@@ -1,0 +1,23 @@
+{
+    "editor.formatOnSave": true,
+    "editor.renderWhitespace": "boundary",
+    "editor.rulers": [88],
+    "editor.tabSize": 4,
+    "files.autoSave": "afterDelay",
+    "files.exclude": {
+      ".pytest_cache": true,
+      "**/__pycache__": true,
+      "**/*.pyc": true
+    },
+    "python.formatting.provider": "black",
+    "python.linting.enabled": true,
+    "python.linting.flake8Enabled": true,
+    "python.linting.pylintArgs": [
+      "--disable=missing-class-docstring",
+      "--disable=missing-function-docstring",
+      "--disable=missing-module-docstring",
+      "--disable=too-few-public-methods",
+    ],
+    "python.linting.pylintCategorySeverity.refactor": "Information",
+    "python.linting.pylintUseMinimalCheckers": false,
+}
