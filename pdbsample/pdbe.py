@@ -27,7 +27,7 @@ def _pdbe_docs(min_res: float, max_res: float) -> List[dict]:
     request_url = "https://www.ebi.ac.uk/pdbe/search/pdb/select?"
     filter_list = "pdb_id,resolution,overall_quality,chain_id,seq_30_cluster_number"
     query = _query(min_res, max_res)
-    request_data = {"fl": filter_list, "q": query, "rows": 10000, "wt": "json"}
+    request_data = {"fl": filter_list, "q": query, "rows": 1000000, "wt": "json"}
     response = requests.post(request_url, data=request_data)
     if response.status_code == 200:
         response_data = response.json().get("response", {})
