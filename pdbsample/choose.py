@@ -24,6 +24,10 @@ def _assign_resolution_bins(args, entries):
 
 def choose_entries(args, entries) -> List[str]:
     res_bins = _assign_resolution_bins(args, entries)
+    exclude = set()
+    if args.exclude is not None:
+        with open(args.exclude) as stream:
+            exclude = {line.strip().lower() for line in stream}
     chosen_clusters = set()
     res_bins.sort(key=lambda res_bin: len(res_bin.entries))
     print("|-------------|---------|----------|--------|")
@@ -34,6 +38,7 @@ def choose_entries(args, entries) -> List[str]:
         lower = int(len(res_bin.entries) * args.cut_best_quality / 100)
         upper = int(len(res_bin.entries) * args.cut_worst_quality / 100)
         filtered = res_bin.entries[lower:-upper]
+        filtered = [e for e in filtered if e.pdbid not in exclude]
         random.shuffle(filtered)
         for entry in filtered:
             clusters = {entity.cluster for entity in entry.entities}
@@ -53,4 +58,4 @@ def choose_entries(args, entries) -> List[str]:
             )
         )
     print("|-------------|---------|----------|--------|")
-    return [e.pdbid for r in res_bins for e in r.chosen]
+    return sorted(e.pdbid for r in res_bins for e in r.chosen)

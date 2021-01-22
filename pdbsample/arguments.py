@@ -39,6 +39,9 @@ def parse():
         default=2,
         help="Number of entries per resolution bin (default: 2)",
     )
+    parser.add_argument(
+        "--exclude", help="Path to a file of PDB IDs to exclude, one per line"
+    )
     args = parser.parse_args()
     args.res_step = (args.res_max - args.res_min) / args.res_bins
     return args
