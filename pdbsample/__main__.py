@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+from typing import List
 import random
 import pdbsample.arguments as arguments
 import pdbsample.pdbe as pdbe
@@ -7,75 +8,65 @@ import pdbsample.utils as utils
 
 
 class ResolutionBin:
-    def __init__(self, i):
-        self.min_res = ARGS.res_min + i * ARGS.res_step
-        self.max_res = ARGS.res_min + (i + 1) * ARGS.res_step
+    def __init__(self, args, i):
+        self.min_res = args.res_min + i * args.res_step
+        self.max_res = args.res_min + (i + 1) * args.res_step
         self.entries = []
         self.chosen = []
 
 
-def assign_resolution_bins(entries):
-    bins = [ResolutionBin(i) for i in range(ARGS.res_bins)]
+def assign_resolution_bins(args, entries):
+    bins = [ResolutionBin(args, i) for i in range(args.res_bins)]
     for entry in entries:
-        if entry.resolution < ARGS.res_min or entry.resolution > ARGS.res_max:
+        if entry.resolution < args.res_min or entry.resolution > args.res_max:
             continue
-        i = int((entry.resolution - ARGS.res_min) / ARGS.res_step)
+        i = int((entry.resolution - args.res_min) / args.res_step)
         if i == len(bins):
             i -= 1
         bins[i].entries.append(entry)
     return bins
 
 
-def choose_entries(entries):
-    res_bins = assign_resolution_bins(entries)
-    # chosen_clusters = set()
+def choose_entries(args, entries) -> List[str]:
+    res_bins = assign_resolution_bins(args, entries)
+    chosen_clusters = set()
     res_bins.sort(key=lambda res_bin: len(res_bin.entries))
+    print("|-------------|---------|----------|--------|")
+    print("| Resolution  | Entries | Filtered | Chosen |")
+    print("|-------------|---------|----------|--------|")
     for res_bin in res_bins:
-        title = "Choosing %.2f-%.2fA structures (%d to choose from)" % (
-            res_bin.min_res,
-            res_bin.max_res,
-            len(res_bin.structures),
+        res_bin.entries.sort(key=lambda entry: entry.quality, reverse=True)
+        lower = int(len(res_bin.entries) * args.cut_best_quality / 100)
+        upper = int(len(res_bin.entries) * args.cut_worst_quality / 100)
+        filtered = res_bin.entries[lower:-upper]
+        random.shuffle(filtered)
+        for entry in filtered:
+            clusters = {entity.cluster for entity in entry.entities}
+            if not chosen_clusters.intersection(clusters):
+                res_bin.chosen.append(entry)
+                chosen_clusters.update(clusters)
+                if len(res_bin.chosen) == args.bin_entries:
+                    break
+        print(
+            "| %4.2f - %4.2f | %7d | %8d | %6d |"
+            % (
+                res_bin.min_res,
+                res_bin.max_res,
+                len(res_bin.entries),
+                len(filtered),
+                len(res_bin.chosen),
+            )
         )
-        print(title)
-        # progress_bar = utils.ProgressBar(title, args.num_structures)
-        # random.shuffle(res_bin.structures)
-        # num_checked = 0
-        # num_missing_files = 0
-        # num_too_similar = 0
-        # num_failed_validation = 0
-        # for structure in res_bin.structures:
-        #     passed = True
-        #     num_checked += 1
-        #     if not input_files_exist(structure):
-        #         num_missing_files += 1
-        #         passed = False
-        #     clusters = {getattr(c, cluster_attr) for c in structure.chains.values()}
-        #     if any(c in chosen_clusters for c in clusters):
-        #         num_too_similar += 1
-        #         passed = False
-        #     if not validation_report_okay(structure):
-        #         num_failed_validation += 1
-        #         passed = False
-        #     if passed:
-        #         res_bin.chosen.append(models.Structure(structure))
-        #         chosen_clusters.update(clusters)
-        #         progress_bar.increment()
-        #         if len(res_bin.chosen) == args.num_structures:
-        #             break
-        # progress_bar.finish()
-        # print("Total number checked:          %6d" % num_checked)
-        # print("Missing input files:           %6d" % num_missing_files)
-        # print("Too similar to already chosen: %6d" % num_too_similar)
-        # print("Failed validation checks:      %6d" % num_failed_validation)
-        # print("")
-    # return {s.id: s for r in res_bins for s in r.chosen}
+    print("|-------------|---------|----------|--------|")
+    return [e.pdbid for r in res_bins for e in r.chosen]
 
 
 def main():
-    entries = pdbe.entries(ARGS)
-    choose_entries(entries)
+    args = arguments.parse()
+    entries = pdbe.entries(args)
+    chosen = choose_entries(args, entries)
+    print(chosen)
 
 
 if __name__ == "__main__":
-    ARGS = arguments.parse()
     main()

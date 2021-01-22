@@ -4,6 +4,18 @@ import argparse
 def parse():
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        "--cut-best-quality",
+        type=float,
+        default=5,
+        help="Percentage of best quality structures to remove from each bin (default: 5)",
+    )
+    parser.add_argument(
+        "--cut-worst-quality",
+        type=float,
+        default=25,
+        help="Percentage of worst quality structures to remove from each bin (default: 25)",
+    )
+    parser.add_argument(
         "--res-bins",
         type=int,
         default=10,
