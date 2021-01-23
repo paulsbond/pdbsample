@@ -13,7 +13,7 @@ def parse():
         "--cut-worst-quality",
         type=float,
         default=50,
-        help="Percentage of worst quality structures to remove from each bin (default: 25)",
+        help="Percentage of worst quality structures to remove from each bin (default: 50)",
     )
     parser.add_argument(
         "--res-bins",
