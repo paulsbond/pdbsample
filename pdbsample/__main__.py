@@ -6,8 +6,7 @@ import pdbsample.choose as choose
 
 def main():
     args = arguments.parse()
-    chosen = choose.choose_entries(args)
-    print(chosen)
+    choose.choose_entries(args)
 
 
 if __name__ == "__main__":
