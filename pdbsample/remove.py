@@ -73,8 +73,8 @@ def _rfree_outliers(results: dict):
             yield entry
 
 
-def remove():
-    pdbe_resolution = {e.pdbid: e.resolution for e in pdbe.entries()}
+def remove(args):
+    pdbe_resolution = {e.pdbid: e.resolution for e in pdbe.entries(args)}
     entries = sorted(os.listdir("entries"))
     to_remove = {}
     results = {}

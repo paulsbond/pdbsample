@@ -13,7 +13,7 @@ def main():
     if args.step == "refine":
         refine(args)
     if args.step == "remove":
-        remove()
+        remove(args)
 
 
 if __name__ == "__main__":
