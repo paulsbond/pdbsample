@@ -5,11 +5,11 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "step",
-        choices=["choose", "refine", "cull"],
+        choices=["choose", "refine", "remove"],
         help="sampling step: either "
         "'choose' for choosing PDB entries, "
         "'refine' for refining them or "
-        "'cull' to remove entries based on refinement data",
+        "'remove' to remove entries based on refinement data",
     )
     choose = parser.add_argument_group("choose step arguments")
     choose.add_argument(

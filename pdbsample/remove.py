@@ -10,7 +10,7 @@ import sklearn.linear_model
 # TODO: Remove if resolution is not close (or exact?) to reported
 
 
-def cull():
+def remove():
     entries = os.listdir("entries")
     to_remove = set()
 
