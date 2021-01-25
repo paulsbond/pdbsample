@@ -1,36 +1,37 @@
+import collections
 import os
 import xml.etree.ElementTree as ET
 import matplotlib.pyplot as plt
 import numpy as np
 import sklearn.linear_model
+import pdbsample.pdbe as pdbe
 
 
-# TODO: Remove based on data completeness
-# TODO: Remove if above linear model
-# TODO: Remove if resolution is not close (or exact?) to reported
-
-
-def remove():
-    entries = os.listdir("entries")
-    to_remove = set()
-
-    resols = []
-    rfrees = []
-    for entry in entries:
-        path = os.path.join("entries", entry, "refmac.xml")
-        if not os.path.exists(path):
-            # print(entry, "has no refmac.xml")
-            to_remove.add(entry)
-            continue
+class _Result:
+    def __init__(self, path: str):
         xml = ET.parse(path).getroot()
-        rfree = float(list(xml.iter("r_free"))[-1].text)
-        resol = float(list(xml.iter("resolution_high"))[0].text)
-        if rfree == -999:
-            # print(entry, "did not produce a valid R-free")
-            to_remove.add(entry)
-            continue
-        resols.append(resol)
-        rfrees.append(rfree)
+        self.rfree = float(list(xml.iter("r_free"))[-1].text)
+        self.resolution = float(list(xml.iter("resolution_high"))[-1].text)
+        self.completeness = float(list(xml.iter("data_completeness"))[-1].text)
+
+
+def _print_reasons(to_remove: dict):
+    print("Removed", len(to_remove), "for the following reasons:")
+    reason_counter = collections.Counter(to_remove.values())
+    for reason, count in reason_counter:
+        print(reason, f"({count})")
+
+
+def _write_reasons_to_file(to_remove: dict):
+    path = os.path.join("data", "removed.txt")
+    with open(path, "w") as stream:
+        for entry, reason in to_remove.items():
+            stream.write(f"{entry} {reason}\n")
+
+
+def _rfree_outliers(results: dict):
+    resols = [result.resolution for result in results.values()]
+    rfrees = [result.rfree for result in results.values()]
 
     percx = []
     percy = []
@@ -55,10 +56,46 @@ def remove():
     print("R2:", model.score(x, percy))
     print("Intercept:", model.intercept_)
     print("Slope:", model.coef_)
+    with open(os.path.join("data", "cutoff.txt"), "w") as stream:
+        stream.write(f"{model.coef_} * resolution + {model.intercept_}")
+
     slopex = np.arange(1, 3.5, 0.1)
     slopey = slopex * model.coef_ + model.intercept_
 
     plt.plot(resols, rfrees, "kx")
     plt.plot(percx, percy, "ro")
     plt.plot(slopex, slopey, "r-")
-    plt.savefig("cull.png")
+    plt.savefig(os.path.join("data", "cutoff.png"))
+
+    for entry, result in results.items():
+        cutoff = result.resolution * model.coef_ + model.intercept_
+        if result.rfree > cutoff:
+            yield entry
+
+
+def remove():
+    pdbe_resolution = {e.pdbid: e.resolution for e in pdbe.entries()}
+    entries = sorted(os.listdir("entries"))
+    to_remove = {}
+    results = {}
+    for entry in entries:
+        xml_path = os.path.join("entries", entry, "refmac.xml")
+        if not os.path.exists(xml_path):
+            to_remove[entry] = "Refmac XML does not exist"
+            continue
+        result = _Result(xml_path)
+        if result.rfree == -999:
+            to_remove[entry] = "R-free value of -999"
+            continue
+        if result.completeness < 90:
+            to_remove[entry] = "Data completeness below 90%"
+            continue
+        if round(result.resolution, 2) != round(pdbe_resolution[entry], 2):
+            to_remove[entry] = "Reported resolution different to refinement resolution"
+            continue
+        results[entry] = result
+    for entry in _rfree_outliers(results):
+        to_remove[entry] = "High R-free value for the resolution"
+    _print_reasons(to_remove)
+    _write_reasons_to_file(to_remove)
+    entries = [e for e in entries if e not in to_remove]
