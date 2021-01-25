@@ -48,7 +48,9 @@ def _rfree_outliers(results: dict):
         n = int(len(tmp) * 0.10)
         percx.append((minres + maxres) / 2)
         percy.append(tmp[-n])
-        print("Resolution", minres, "to", maxres, "90th R-free percentile:", tmp[-n])
+        print(
+            f"Resolution {minres:.1f} to {maxres:.1f} 90th R-free percentile: {tmp[-n]:.3}"
+        )
 
     model = sklearn.linear_model.LinearRegression()
     x = np.array(percx).reshape((-1, 1))
@@ -99,4 +101,8 @@ def remove(args):
         to_remove[entry] = "High R-free value for the resolution"
     _print_reasons(to_remove)
     _write_reasons_to_file(to_remove)
-    entries = [e for e in entries if e not in to_remove]
+    os.makedirs("removed", exist_ok=True)
+    for entry in to_remove:
+        src = os.path.join("entries", entry)
+        dst = os.path.join("removed", entry)
+        os.rename(src, dst)
