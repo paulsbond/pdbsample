@@ -16,16 +16,17 @@ class _Result:
 
 
 def _print_reasons(to_remove: dict):
-    print("Removed", len(to_remove), "for the following reasons:")
+    print("Removed", len(to_remove), "entries for the following reasons:")
     reason_counter = collections.Counter(to_remove.values())
-    for reason, count in reason_counter:
+    for reason, count in reason_counter.most_common():
         print(reason, f"({count})")
 
 
 def _write_reasons_to_file(to_remove: dict):
     path = os.path.join("data", "removed.txt")
     with open(path, "w") as stream:
-        for entry, reason in to_remove.items():
+        for entry in sorted(to_remove.keys()):
+            reason = to_remove[entry]
             stream.write(f"{entry} {reason}\n")
 
 
