@@ -1,12 +1,16 @@
 #!/usr/bin/python3
 
-import pdbsample.arguments as arguments
-import pdbsample.choose as choose
+from pdbsample.arguments import parse_arguments
+from pdbsample.choose import choose
+from pdbsample.refine import refine
 
 
 def main():
-    args = arguments.parse()
-    choose.choose_entries(args)
+    args = parse_arguments()
+    if args.step == "choose":
+        choose(args)
+    if args.step == "refine":
+        refine(args)
 
 
 if __name__ == "__main__":

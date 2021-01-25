@@ -1,7 +1,11 @@
 from typing import List
 import os
 import random
+import sys
 import pdbsample.pdbe as pdbe
+
+
+_CACHE_PATH = os.path.join("data", "chosen.txt")
 
 
 class _ResolutionBin:
@@ -25,6 +29,7 @@ def _assign_resolution_bins(args, entries):
 
 
 def _choose_new_entries(args) -> List[str]:
+    print("Choosing a new set of entries")
     entries = pdbe.entries(args)
     res_bins = _assign_resolution_bins(args, entries)
     exclude = set()
@@ -38,8 +43,8 @@ def _choose_new_entries(args) -> List[str]:
     print("|-------------|---------|----------|--------|")
     for res_bin in res_bins:
         res_bin.entries.sort(key=lambda entry: entry.quality, reverse=True)
-        lower = int(len(res_bin.entries) * args.cut_best_quality / 100)
-        upper = int(len(res_bin.entries) * args.cut_worst_quality / 100)
+        lower = int(len(res_bin.entries) * args.cut_best / 100)
+        upper = int(len(res_bin.entries) * args.cut_worst / 100)
         filtered = res_bin.entries[lower:-upper]
         filtered = [e for e in filtered if e.pdbid not in exclude]
         random.shuffle(filtered)
@@ -64,15 +69,17 @@ def _choose_new_entries(args) -> List[str]:
     return sorted(e.pdbid for r in res_bins for e in r.chosen)
 
 
-def choose_entries(args) -> List[str]:
-    path = os.path.join("data", "chosen.txt")
-    if os.path.exists(path):
-        print("Using cached chosen entries")
-        with open(path) as stream:
-            return [line.strip() for line in stream]
-    print("Choosing a new set of entries")
+def choose(args) -> None:
     chosen = _choose_new_entries(args)
-    with open(path, "w") as stream:
+    print("Writing chosen entries to", _CACHE_PATH)
+    with open(_CACHE_PATH, "w") as stream:
         for pdbid in chosen:
             stream.write(pdbid + "\n")
-    return chosen
+
+
+def chosen() -> List[str]:
+    print("Reading chosen entries from", _CACHE_PATH)
+    if os.path.exists(_CACHE_PATH):
+        with open(_CACHE_PATH) as stream:
+            return [line.strip() for line in stream]
+    sys.exit("Could not read chosen entries, run the choose step first")

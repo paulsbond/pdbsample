@@ -6,6 +6,9 @@ import requests
 import solrq
 
 
+_CACHE_PATH = os.path.join("data", "pdbe.json")
+
+
 def _query(min_res: float, max_res: float) -> solrq.Q:
     return solrq.Q(
         experimental_method="X-ray diffraction",
@@ -18,10 +21,9 @@ def _query(min_res: float, max_res: float) -> solrq.Q:
 
 
 def _pdbe_docs(min_res: float, max_res: float) -> List[dict]:
-    path = os.path.join("data", "pdbe.json")
-    if os.path.exists(path):
+    if os.path.exists(_CACHE_PATH):
         print("Using cached PDBe data")
-        with open(path) as stream:
+        with open(_CACHE_PATH) as stream:
             return json.load(stream)
     print("Making a new query to PDBe")
     request_url = "https://www.ebi.ac.uk/pdbe/search/pdb/select?"
@@ -33,7 +35,7 @@ def _pdbe_docs(min_res: float, max_res: float) -> List[dict]:
         response_data = response.json().get("response", {})
         print("Entries found:", response_data["numFound"])
         os.makedirs("data", exist_ok=True)
-        with open("data/pdbe.json", "w") as stream:
+        with open(_CACHE_PATH, "w") as stream:
             json.dump(response_data["docs"], stream, separators=(",", ":"))
         return response_data["docs"]
     print(f"Response with status code {response.status_code} received")
