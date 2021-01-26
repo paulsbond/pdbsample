@@ -2,6 +2,7 @@ import collections
 import json
 import os
 import xml.etree.ElementTree as ET
+import gemmi
 import matplotlib.pyplot as plt
 import numpy as np
 import sklearn.linear_model
@@ -109,6 +110,12 @@ def remove(args):
             continue
         if round(result.resolution, 2) != round(pdbe_resolution[entry], 2):
             to_remove[entry] = "Reported resolution different to refinement resolution"
+            continue
+        cif_path = os.path.join("entries", entry, "refmac.cif")
+        try:
+            gemmi.read_structure(cif_path)
+        except RuntimeError:
+            to_remove[entry] = "Refmac CIF file cannot be read by gemmi"
             continue
         results[entry] = result
     for entry in _rfree_outliers(results):
