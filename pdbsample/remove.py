@@ -1,4 +1,5 @@
 import collections
+import json
 import os
 import xml.etree.ElementTree as ET
 import matplotlib.pyplot as plt
@@ -76,6 +77,19 @@ def _rfree_outliers(results: dict):
             yield entry
 
 
+def _write_chains_json(args):
+    entries = pdbe.entries(args)
+    kept = {x for x in os.listdir("entries")}
+    chains = {}
+    for entry in entries:
+        if entry.pdbid in kept:
+            chains[entry.pdbid] = [entity.chain for entity in entry.entities]
+    path = os.path.join("data", "chains.json")
+    print("Writing", path)
+    with open(path, "w") as stream:
+        json.dump(chains, stream, indent=2)
+
+
 def remove(args):
     pdbe_resolution = {e.pdbid: e.resolution for e in pdbe.entries(args)}
     entries = sorted(os.listdir("entries"))
@@ -106,3 +120,4 @@ def remove(args):
         src = os.path.join("entries", entry)
         dst = os.path.join("removed", entry)
         os.rename(src, dst)
+    _write_chains_json(args)
